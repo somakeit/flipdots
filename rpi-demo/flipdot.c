@@ -176,9 +176,9 @@ static void display_frame_differential(uint8_t *to_0, uint8_t *to_1)
 /* Output bit on reg and pulse clk signal */
 static void sreg_push_bit(enum sreg reg, uint8_t bit)
 {
-    bcm2835_gpio_write(DATA(reg), bit);
-    bcm2835_gpio_write(CLK(reg), 1);
-    bcm2835_gpio_write(CLK(reg), 0);
+    bcm2835_gpio_write(DATA(reg), bit?HIGH:LOW);
+    bcm2835_gpio_write(CLK(reg), HIGH);
+    bcm2835_gpio_write(CLK(reg), LOW);
 }
 
 static void sreg_fill(enum sreg reg, uint8_t *data, int count)
