@@ -43,10 +43,10 @@ typedef struct {
 #define FLIP_DELAY_WHITE 1500			/* us */
 #define STROBE_DELAY 1			/* us */
 
-#define MODULE_COUNT 6
+#define MODULE_COUNT 2
 
-#define MODULE_ROWS 16
-#define MODULE_COLS 20
+#define MODULE_ROWS 1
+#define MODULE_COLS 2
 
 #define MODULE_PIXLE_COUNT (MODULE_ROWS*MODULE_COLS)
 #define MODULE_BYTE_COUNT (MODULE_PIXEL_COUNT/8)

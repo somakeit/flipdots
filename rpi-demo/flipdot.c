@@ -21,7 +21,7 @@
 
 #include "flipdot.h"
 
-#include <max7301.h>
+#include <bcm2835.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -36,20 +36,20 @@ extern int usleep (__useconds_t __useconds);
 #define CLEARBIT(x,i) x[i>>3]&=(1<<(i&7))^0xFF;
 
 #define DATA(reg)								\
-	((reg == ROW) ? pinning[active_pinning].data_row : pinning[active_pinning].data_col)
+	((reg == ROW) ? pinning.data_row : pinning.data_col)
 #define CLK(reg)								\
-	((reg == ROW) ? pinning[active_pinning].clk_row : pinning[active_pinning].clk_col)
+	((reg == ROW) ? pinning.clk_row : pinning.clk_col)
 #define OE(reg)									\
 	((reg == ROW) ? OE_ROW : OE_COL)
 
 #define LEN(a)									\
 	(sizeof(a)/sizeof(a[0]))
 
-static uint8_t buffer_a[4][DISP_BYTE_COUNT];
-static uint8_t buffer_b[4][DISP_BYTE_COUNT];
-static uint8_t buffer_to_0[4][DISP_BYTE_COUNT];
-static uint8_t buffer_to_1[4][DISP_BYTE_COUNT];
-static uint8_t *buffer_new[4], *buffer_old[4];
+static uint8_t buffer_a[DISP_BYTE_COUNT];
+static uint8_t buffer_b[DISP_BYTE_COUNT];
+static uint8_t buffer_to_0[DISP_BYTE_COUNT];
+static uint8_t buffer_to_1[DISP_BYTE_COUNT];
+static uint8_t *buffer_new, *buffer_old;
 
 static void sreg_push_bit(enum sreg reg, uint8_t bit);
 static void sreg_fill(enum sreg reg, uint8_t *data, int count);
@@ -67,14 +67,10 @@ static void map_two_buffers(uint8_t (*fun)(uint8_t, uint8_t), uint8_t a[], uint8
 
 static void display_frame_differential(uint8_t *to_0, uint8_t *to_1);
 
-flipdot_pinning pinning[4] = {
-    {.data_col = 10, .data_row = 8, .strobe = 6, .oe_white = 9, .oe_black = 7, .clk_col = 4, .clk_row = 5},
-    {.data_col = 17, .data_row = 15, .strobe = 13, .oe_white = 16, .oe_black = 14, .clk_col = 11, .clk_row = 12},
-    {.data_col = 24, .data_row = 22, .strobe = 20, .oe_white = 23, .oe_black = 21, .clk_col = 18, .clk_row = 19},
-    {.data_col = 31, .data_row = 29, .strobe = 27, .oe_white = 30, .oe_black = 28, .clk_col = 25, .clk_row = 26},
-};
+flipdot_pinning pinning = {.data_col = RPI_GPIO_P1_23, .data_row = RPI_GPIO_P1_21, .strobe = RPI_GPIO_P1_22, .oe_white = RPI_GPIO_P1_11, .oe_black = RPI_GPIO_P1_10, .clk_col = RPI_GPIO_P1_15, .clk_row = RPI_GPIO_P1_18};
 
 static uint8_t flipper[256];
+
 
 static uint8_t reverse(uint8_t b)
 {
@@ -83,36 +79,32 @@ static uint8_t reverse(uint8_t b)
     b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
     return b;
 }
-int active_pinning = 3;
 
-void
-flipdot_init(void)
+
+void flipdot_init(void)
 {
-    max7301_init(100, false);
+    bcm2835_init();
 
 	/* init pins */
-    int i;
-    for(i = 0; i < 4; i++) {
-        active_pinning = i;
-        max7301_set_pin_as_output(pinning[i].data_col);
-        max7301_set_pin_as_output(pinning[i].data_row);
-        max7301_set_pin_as_output(pinning[i].strobe);
-        max7301_set_pin_as_output(pinning[i].oe_white);
-        max7301_set_pin_as_output(pinning[i].oe_black);
-        max7301_set_pin_as_output(pinning[i].clk_col);
-        max7301_set_pin_as_output(pinning[i].clk_row);
+    bcm2835_gpio_fsel(pinning.data_col, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(pinning.data_row, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(pinning.strobe,   BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(pinning.oe_white, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(pinning.oe_black, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(pinning.clk_col,  BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(pinning.clk_row,  BCM2835_GPIO_FSEL_OUTP);
 
-        /* Init buffer pointers */
-        buffer_new[active_pinning] = buffer_a[active_pinning];
-        buffer_old[active_pinning] = buffer_b[active_pinning];
+    /* Init buffer pointers */
+    buffer_new = buffer_a;
+    buffer_old = buffer_b;
 
-        /* Synchronize buffers and flipdot pixel state */
-        memset(buffer_new[active_pinning], 0xFF, DISP_BYTE_COUNT);
-        memset(buffer_old[active_pinning], 0x00, DISP_BYTE_COUNT);
-        flipdot_data(buffer_old[active_pinning], DISP_BYTE_COUNT);
-        flipdot_data(buffer_old[active_pinning], DISP_BYTE_COUNT);
-        flipdot_data(buffer_old[active_pinning], DISP_BYTE_COUNT);
-    }
+    /* Synchronize buffers and flipdot pixel state */
+    memset(buffer_new, 0xFF, DISP_BYTE_COUNT);
+    memset(buffer_old, 0x00, DISP_BYTE_COUNT);
+    flipdot_data(buffer_old, DISP_BYTE_COUNT);
+    flipdot_data(buffer_old, DISP_BYTE_COUNT);
+    flipdot_data(buffer_old, DISP_BYTE_COUNT);
+    
 
     for(i=0; i<256; i++) {
         flipper[i] = reverse(i);
@@ -120,48 +112,46 @@ flipdot_init(void)
 
 }
 
-void
-flipdot_data(uint8_t *frame, uint16_t size)
+
+void flipdot_data(uint8_t *frame, uint16_t size)
 {
 	uint8_t *tmp;
 
-	memcpy(buffer_old[active_pinning], frame, size); /* Copy frame into buffer with old data */
+	memcpy(buffer_old, frame, size); /* Copy frame into buffer with old data */
     
     int i;
 	for(i = 0; i < size; i++) {
-        uint8_t c = buffer_old[active_pinning][i];
-        buffer_old[active_pinning][i] = flipper[c];
+        uint8_t c = buffer_old[i];
+        buffer_old[i] = flipper[c];
     }
 
-	tmp = buffer_old[active_pinning];				 /* swap pointers buffer_new[active_pinning] and buffer_old[active_pinning] */
-	buffer_old[active_pinning] = buffer_new[active_pinning];
-	buffer_new[active_pinning] = tmp;
+	tmp = buffer_old;				 /* swap pointers buffer_new and buffer_old */
+	buffer_old = buffer_new;
+	buffer_new = tmp;
 	
-	map_two_buffers(diff_to_0, buffer_old[active_pinning], buffer_new[active_pinning], buffer_to_0[active_pinning], DISP_BYTE_COUNT);
-	map_two_buffers(diff_to_1, buffer_old[active_pinning], buffer_new[active_pinning], buffer_to_1[active_pinning], DISP_BYTE_COUNT);
+	map_two_buffers(diff_to_0, buffer_old, buffer_new, buffer_to_0, DISP_BYTE_COUNT);
+	map_two_buffers(diff_to_1, buffer_old, buffer_new, buffer_to_1, DISP_BYTE_COUNT);
 
-	display_frame_differential(buffer_to_0[active_pinning], buffer_to_1[active_pinning]);
+	display_frame_differential(buffer_to_0, buffer_to_1);
 }
 
-static void
-map_two_buffers(uint8_t (*fun)(uint8_t, uint8_t), uint8_t a[], uint8_t b[], uint8_t dst[], unsigned int count) {
+
+static void map_two_buffers(uint8_t (*fun)(uint8_t, uint8_t), uint8_t a[], uint8_t b[], uint8_t dst[], unsigned int count) {
 	for (int i = 0; i < count; ++i) {
 		dst[i] = fun(a[i], b[i]);
 	}
 }
 
-uint8_t
-diff_to_0(uint8_t old, uint8_t new) {
+
+uint8_t diff_to_0(uint8_t old, uint8_t new) {
 	return old & ~new;
 }
 
-uint8_t
-diff_to_1(uint8_t old, uint8_t new) {
+uint8_t diff_to_1(uint8_t old, uint8_t new) {
 	return ~(~old & new);
 }
 
-static void
-display_frame_differential(uint8_t *to_0, uint8_t *to_1)
+static void display_frame_differential(uint8_t *to_0, uint8_t *to_1)
 {
 	uint8_t row_select[DISP_ROWS/8];
 
@@ -184,18 +174,14 @@ display_frame_differential(uint8_t *to_0, uint8_t *to_1)
 }
 
 /* Output bit on reg and pulse clk signal */
-static void
-sreg_push_bit(enum sreg reg, uint8_t bit)
+static void sreg_push_bit(enum sreg reg, uint8_t bit)
 {
-    max7301_set_pin(DATA(reg), bit);
-    max7301_step();
-    max7301_set_pin(CLK(reg), 1);
-    max7301_step();
-    max7301_set_pin(CLK(reg), 0);
+    bcm2835_gpio_write(DATA(reg), bit);
+    bcm2835_gpio_write(CLK(reg), 1);
+    bcm2835_gpio_write(CLK(reg), 0);
 }
 
-static void
-sreg_fill(enum sreg reg, uint8_t *data, int count)
+static void sreg_fill(enum sreg reg, uint8_t *data, int count)
 {
 	switch (reg) {
 		case ROW: sreg_fill_row(data, count); break;
@@ -204,8 +190,7 @@ sreg_fill(enum sreg reg, uint8_t *data, int count)
 }
 
 /* Fill col register with count bits from data LSB first */
-static void
-sreg_fill_col(uint8_t *data, int count)
+static void sreg_fill_col(uint8_t *data, int count)
 {
 	int i = 0;
 	while (i < count) {
@@ -215,8 +200,7 @@ sreg_fill_col(uint8_t *data, int count)
 }
 
 /* TODO: generalize for more panels */
-static void
-sreg_fill_row(uint8_t *data, int count)
+static void sreg_fill_row(uint8_t *data, int count)
 {
     /* This is necessary because the row
 	* register has 4 unmapped bits */
@@ -241,42 +225,36 @@ sreg_fill_row(uint8_t *data, int count)
     }	
 }
 
-static void
-strobe(void)
+
+static void strobe(void)
 {
-    max7301_set_pin(pinning[active_pinning].strobe, 1);
-    max7301_flush_history();
+    bcm2835_gpio_write(pinning.strobe, HIGH);
+
 	_delay_us(STROBE_DELAY);
-    max7301_set_pin(pinning[active_pinning].strobe, 0);
-    max7301_flush_history();
+
+    bcm2835_gpio_write(pinning.strobe, LOW);
 }
 
-static void
-flip_white(void)
+
+static void flip_white(void)
 {
-    max7301_flush_history();
-    max7301_set_pin(pinning[active_pinning].oe_black, 0);
-    max7301_set_pin(pinning[active_pinning].oe_white, 1);
-    max7301_flush_history();
+    bcm2835_gpio_write(pinning.oe_black, LOW);
+    bcm2835_gpio_write(pinning.oe_white, HIGH);
 
 	_delay_us(FLIP_DELAY_WHITE);
 
-    max7301_set_pin(pinning[active_pinning].oe_black, 0);
-    max7301_set_pin(pinning[active_pinning].oe_white, 0);
-    max7301_flush_history();
+    bcm2835_gpio_write(pinning.oe_black, LOW);
+    bcm2835_gpio_write(pinning.oe_white, LOW);
 }
 
-static void
-flip_black(void)
+
+static void flip_black(void)
 {
-    max7301_flush_history();
-    max7301_set_pin(pinning[active_pinning].oe_black, 1);
-    max7301_set_pin(pinning[active_pinning].oe_white, 0);
-    max7301_flush_history();
+    bcm2835_gpio_write(pinning.oe_black, HIGH);
+    bcm2835_gpio_write(pinning.oe_white, LOW);
 
 	_delay_us(FLIP_DELAY_BLACK);
 
-    max7301_set_pin(pinning[active_pinning].oe_black, 0);
-    max7301_set_pin(pinning[active_pinning].oe_white, 0);
-    max7301_flush_history();
+    bcm2835_gpio_write(pinning.oe_black, LOW);
+    bcm2835_gpio_write(pinning.oe_white, LOW);
 }
