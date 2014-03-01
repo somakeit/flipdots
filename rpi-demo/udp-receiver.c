@@ -3,13 +3,13 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-extern int active_pinning;
 int main(void)
 {
+    
     bool init = false;
     flipdot_net_init();
     
-    uint8_t data[3][2*20*6];
+    uint8_t data[(16*80)/8];
     while (1) {
         int n = flipdot_net_recv_frame((uint8_t *)data, sizeof(data));
         if(!init) {
@@ -18,16 +18,11 @@ int main(void)
         }
         
         printf("got %u bytes\n", n);
-        int i;
-        for(i = 1; i < 4; i++) {
-            active_pinning = i;
-            if(n >= sizeof(data[0])) {
-                flipdot_data(data[i-1], sizeof(data[0]));
-                n -=  sizeof(data[0]);
-            } else {
-                flipdot_data(data[i-1], n);
-                break;
-            }
+        if(n >= sizeof(data)) {
+            flipdot_data(data, sizeof(data));
+            n -=  sizeof(data);
+        } else {
+            flipdot_data(data, n);
         }
     }
     return 0;

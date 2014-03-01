@@ -67,9 +67,18 @@ static void map_two_buffers(uint8_t (*fun)(uint8_t, uint8_t), uint8_t a[], uint8
 
 static void display_frame_differential(uint8_t *to_0, uint8_t *to_1);
 
-flipdot_pinning pinning = {.data_col = RPI_GPIO_P1_23, .data_row = RPI_GPIO_P1_21, .strobe = RPI_GPIO_P1_22, .oe_white = RPI_GPIO_P1_11, .oe_black = RPI_GPIO_P1_10, .clk_col = RPI_GPIO_P1_15, .clk_row = RPI_GPIO_P1_18};
+flipdot_pinning pinning = {
+    .data_col = RPI_GPIO_P1_08,
+    .data_row = RPI_GPIO_P1_24,
+    .strobe   = RPI_GPIO_P1_22,
+    .oe_white = RPI_GPIO_P1_18,
+    .oe_black = RPI_GPIO_P1_16,
+    .clk_col  = RPI_GPIO_P1_12,
+    .clk_row  = RPI_GPIO_P1_10
+};
 
 static uint8_t flipper[256];
+
 
 
 static uint8_t reverse(uint8_t b)
@@ -83,6 +92,7 @@ static uint8_t reverse(uint8_t b)
 
 void flipdot_init(void)
 {
+
     bcm2835_init();
 
 	/* init pins */
@@ -105,7 +115,7 @@ void flipdot_init(void)
     flipdot_data(buffer_old, DISP_BYTE_COUNT);
     flipdot_data(buffer_old, DISP_BYTE_COUNT);
     
-
+    int i;
     for(i=0; i<256; i++) {
         flipper[i] = reverse(i);
     }
@@ -153,7 +163,7 @@ uint8_t diff_to_1(uint8_t old, uint8_t new) {
 
 static void display_frame_differential(uint8_t *to_0, uint8_t *to_1)
 {
-	uint8_t row_select[DISP_ROWS/8];
+	uint8_t row_select[DISP_ROWS/8] ={0};
 
 	for (int row = 0; row < DISP_ROWS; ++row) {
 		uint8_t *row_data_to_0 = to_0 + row * DISP_COLS/8;
@@ -243,7 +253,6 @@ static void flip_white(void)
 
 	_delay_us(FLIP_DELAY_WHITE);
 
-    bcm2835_gpio_write(pinning.oe_black, LOW);
     bcm2835_gpio_write(pinning.oe_white, LOW);
 }
 
@@ -256,5 +265,4 @@ static void flip_black(void)
 	_delay_us(FLIP_DELAY_BLACK);
 
     bcm2835_gpio_write(pinning.oe_black, LOW);
-    bcm2835_gpio_write(pinning.oe_white, LOW);
 }
