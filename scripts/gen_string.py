@@ -4,7 +4,7 @@ import socket, time
 import Image, ImageFont, ImageDraw, sys
 import fileinput
 
-UDPHOST="2001:7f0:3003:cafe:222:f9ff:fe01:c65"
+UDPHOST="192.168.2.5"
 UDPPORT=2323
 
 FPS = 3
@@ -16,7 +16,7 @@ FONT_OFFSET= (1, -1)
 C_BLACK = (0, 0, 0)
 C_WHITE = (255, 255, 255)
 
-sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def list2byte(l):
     byte = 0

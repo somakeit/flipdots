@@ -57,9 +57,7 @@ HEIGHT = 120
 
 matrix = FlipdotMatrix(
      udpHostsAndPorts = [
-         ("2001:67c:20a1:1063:ba27:ebff:fe86:8697", 5555),
-         ("2001:67c:20a1:1063:ba27:ebff:fe23:60d7", 5555),
-         ("2001:67c:20a1:1063:ba27:ebff:fe71:dd32", 5555),
+         ("192.168.2.5", 2323),
      ],
      imageSize = (WIDTH, HEIGHT),
      transposed = True,

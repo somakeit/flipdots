@@ -53,7 +53,7 @@ settings = {
 "WRAP_BORDERS":True,
 
 # List of UDP hosts you can cycle through with n
-"UDPHOSTS":["::1","2001:7f0:3003:cafe:222:f9ff:fe01:c65","2001:7f0:3003:cafe:4be:6b21:90c7:fbd9"],
+"UDPHOSTS":["192.168.2.5"],
 # Frames per second
 "FPS": 10,
 # map to load, filename must exist in directory lvl/SIZE_X_SIZE_Y/
@@ -78,7 +78,7 @@ MQTT_CLIENT_ID = 'de.ccc.muc.flipdot.snake'
 global highscore
 highscore = 0
 
-sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 class MqttLoop(threading.Thread):
     def __init__(self, mqtt_client):

@@ -5,9 +5,9 @@ from random import randint
 
 
 
-UDPHOST="2001:7f0:3003:cafe:ba27:ebff:fe71:dd32"
+UDPHOST="192.168.2.5"
 #UDPHOST="fe80::221:6bff:fe4c:6e7c"
-UDPHOSTS=["2001:7f0:3003:cafe:ba27:ebff:fe86:8697","2001:7f0:3003:cafe:ba27:ebff:fe23:60d7","2001:7f0:3003:cafe:ba27:ebff:fe71:dd32"]
+UDPHOSTS=["192.168.2.5"]
 UDPPORT=2323
 
 SIZE_Y = 120
@@ -18,7 +18,7 @@ DELAY =0.5
 SEEDFILE="glider"
 #SEEDFILE="pulsar"
 
-sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def randomUniverse():
     """

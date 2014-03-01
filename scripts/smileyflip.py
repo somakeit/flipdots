@@ -4,10 +4,10 @@ import socket
 import time
 import sys
 
-UDPHOST="fe80::222:f9ff:fe01:c65%eth0"
+UDPHOST="192.168.2.5"
 UDPPORT=2323
 
-sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def send(image):
 	msg = '';

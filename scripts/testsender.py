@@ -4,10 +4,10 @@ import socket
 import time
 import sys
 
-UDPHOST="2001:7f0:3003:cafe:222:f9ff:fe01:c65"
+UDPHOST="192.168.2.5"
 UDPPORT=2323
 
-sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def send(value):
   msg = chr(value)*((16*40)/8)
