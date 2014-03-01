@@ -64,7 +64,7 @@ udphostc=0
 UDPPORT=2323
 
 SIZE_Y = 16
-SIZE_X = 40
+SIZE_X = 80
 
 PX = (0,1) # white-on-black = (0,1), black-on-white = (1,0)
 

@@ -52,8 +52,8 @@ ROUND_TIME = 600
 # reserved pixels at the top
 TOP = 20
 
-WIDTH = 144
-HEIGHT = 120
+WIDTH = 80
+HEIGHT = 16
 
 matrix = FlipdotMatrix(
      udpHostsAndPorts = [

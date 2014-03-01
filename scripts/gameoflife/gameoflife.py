@@ -10,9 +10,9 @@ UDPHOST="192.168.2.5"
 UDPHOSTS=["192.168.2.5"]
 UDPPORT=2323
 
-SIZE_Y = 120
-SIZE_X = len(UDPHOSTS)*48
 DELAY =0.5 
+SIZE_Y = 80
+SIZE_X = 16
 
 #SEEDFILE="lightweight_spaceship"
 SEEDFILE="glider"

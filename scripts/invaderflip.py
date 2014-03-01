@@ -99,18 +99,18 @@ while True:
 
 	preframe = []
 	postframe = []
-	preframe += ([[1] * 40] * random.randrange(0, 16 - len(invaders[invader][0]), 1))
-	postframe += ([[1] * 40] * (16 - len(preframe) - len(invaders[invader][0])))
+	preframe += ([[1] * 80] * random.randrange(0, 16 - len(invaders[invader][0]), 1))
+	postframe += ([[1] * 80] * (16 - len(preframe) - len(invaders[invader][0])))
 	leftspace = 1
 	
-	while leftspace < (40 - len(invaders[invader][0][0])):
+	while leftspace < (80 - len(invaders[invader][0][0])):
 		frame = []
 		frame += preframe
 		showframe = leftspace % 2
 		for line in invaders[invader][showframe]:
 			theline = [1] * leftspace
 			theline += line
-			theline += [1] * (40 - len(theline))
+			theline += [1] * (80 - len(theline))
 			frame.append(theline)
 		frame += postframe
 		#print frame

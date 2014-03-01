@@ -10,7 +10,7 @@ UDPPORT=2323
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def send(value):
-  msg = chr(value)*((16*40)/8)
+  msg = chr(value)*((16*80)/8)
   sock.sendto(msg, (UDPHOST, UDPPORT))
 
 v = int(sys.argv[1])

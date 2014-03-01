@@ -32,7 +32,7 @@ def send(image):
 ALIVE = 1
 DEAD = 0
 SIZE_Y = 16
-SIZE_X = 40
+SIZE_X = 80
 RANDOM = 4
 DELAY = 20
 

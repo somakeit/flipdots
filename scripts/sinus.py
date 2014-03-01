@@ -29,7 +29,7 @@ def send(image):
 	
 	sock.sendto(msg, (UDPHOST, UDPPORT))
 
-COLS = 40
+COLS = 80
 ROWS = 16
 
 def make_buffer(cols, rows):
