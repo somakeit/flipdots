@@ -1,7 +1,8 @@
 #!/usr/bin/env python2
 
 import socket, time
-import Image, ImageFont, ImageDraw, sys
+from PIL import Image, ImageFont, ImageDraw
+import sys
 import fileinput
 
 UDPHOST="192.168.2.5"

@@ -30,7 +30,8 @@
 
 import socket, time, math
 from random import randint
-import Image, ImageFont, ImageDraw, sys
+from PIL import Image, ImageFont, ImageDraw
+import sys
 import curses
 import json
 import threading
