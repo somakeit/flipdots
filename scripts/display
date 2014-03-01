@@ -1,6 +1,6 @@
 #!/bin/sh
 
-convert $1 -resize 144x120 -gravity center -background black -extent 144x120 -rotate 90 $1.pbm
+convert $1 -resize 80x16 -gravity center -background black -extent 80x16 $1.pbm
 
 #pnmsmooth $1.pbm > $1.smooth.pgm
 #convert  $1.smooth.pgm  $1.smooth.pbm
@@ -9,7 +9,5 @@ convert $1 -resize 144x120 -gravity center -background black -extent 144x120 -ro
 pnminvert $1.pbm > $1.inv.pbm
 tail -n +3 $1.inv.pbm > $1.bin
 
-dd if=$1.bin skip=0 bs=720 count=1 2>/dev/null | socat - UDP:flipdot-left:2323 &
-dd if=$1.bin skip=1 bs=720 count=1 2>/dev/null | socat - UDP:flipdot-middle:2323 &
-dd if=$1.bin skip=2 bs=720 count=1 2>/dev/null | socat - UDP:flipdot-right:2323 &
+dd if=$1.bin skip=0 bs=720 count=1 2>/dev/null | socat - UDP:192.168.2.5:2323 &
 
