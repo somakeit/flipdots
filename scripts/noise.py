@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import socket, time, math
 from random import randint
 

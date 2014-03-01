@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import socket, time
 import Image, ImageFont, ImageDraw, sys
 import fileinput

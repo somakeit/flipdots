@@ -1,4 +1,5 @@
 #coding=UTF-8
+#!/usr/bin/env python2
 import socket
 import time
 import sys
