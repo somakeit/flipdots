@@ -2,11 +2,9 @@
 
 int main(void)
 {
-
-     
     flipdot_init();
     
-    uint8_t data[2*20*7];
+    uint8_t data[80*16/8];
     uint8_t d = 0; 
     while (1) {
         int i;
