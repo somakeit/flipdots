@@ -5,9 +5,9 @@ from random import randint
 
 
 
-UDPHOST="192.168.2.5"
+UDPHOST="flipdot.ffa"
 #UDPHOST="fe80::221:6bff:fe4c:6e7c"
-UDPHOSTS=["192.168.2.5"]
+UDPHOSTS=["flipdot.ffa"]
 UDPPORT=2323
 
 DELAY =0.5 

@@ -5,7 +5,7 @@ from PIL import Image, ImageFont, ImageDraw
 import sys
 import fileinput
 
-UDPHOST="192.168.2.5"
+UDPHOST="flipdot.ffa"
 UDPPORT=2323
 
 FPS = 3

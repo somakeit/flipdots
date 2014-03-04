@@ -4,7 +4,7 @@ import socket
 import time
 import sys
 
-UDPHOST="192.168.2.5"
+UDPHOST="flipdot.ffa"
 UDPPORT=2323
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
