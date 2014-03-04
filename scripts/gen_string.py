@@ -11,7 +11,7 @@ UDPPORT=2323
 FPS = 3
 
 IMG_SIZE = (80, 16)
-FONT_SIZE = 8
+FONT_SIZE = 16
 FONT_OFFSET= (1, -1)
 
 C_BLACK = (0, 0, 0)
@@ -33,8 +33,8 @@ def str2array(s):
     image = Image.new("RGBA", IMG_SIZE, C_BLACK)
     draw = ImageDraw.Draw(image)
     draw.fontmode = "1"         # No AA
-    font = ImageFont.load_default()
-    # font = ImageFont.truetype("FreeSans.ttf", FONT_SIZE)
+    #font = ImageFont.load_default()
+    font = ImageFont.truetype("/usr/share/fonts/TTF/DejaVuSans-Bold.ttf", FONT_SIZE)
 
     draw.text(FONT_OFFSET, s, font=font, fill=C_WHITE)
 
