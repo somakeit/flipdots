@@ -68,21 +68,20 @@ static void map_two_buffers(uint8_t (*fun)(uint8_t, uint8_t), uint8_t a[], uint8
 static void display_frame_differential(uint8_t *to_0, uint8_t *to_1);
 
 flipdot_pinning pinning = {
-    .data_col = RPI_GPIO_P1_08,
-    .data_row = RPI_GPIO_P1_24,
-    .strobe   = RPI_GPIO_P1_22,
-    .oe_white = RPI_GPIO_P1_18,
-    .oe_black = RPI_GPIO_P1_16,
-    .clk_col  = RPI_GPIO_P1_12,
-    .clk_row  = RPI_GPIO_P1_10
+    .data_col = RPI_V2_GPIO_P1_08,
+    .data_row = RPI_V2_GPIO_P1_24,
+    .strobe   = RPI_V2_GPIO_P1_22,
+    .oe_white = RPI_V2_GPIO_P1_18,
+    .oe_black = RPI_V2_GPIO_P1_16,
+    .clk_col  = RPI_V2_GPIO_P1_12,
+    .clk_row  = RPI_V2_GPIO_P1_10
 };
 
 static uint8_t flipper[256];
 
 
 
-static uint8_t reverse(uint8_t b)
-{
+static uint8_t reverse(uint8_t b) {
     b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
     b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
     b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
@@ -90,8 +89,7 @@ static uint8_t reverse(uint8_t b)
 }
 
 
-void flipdot_init(void)
-{
+void flipdot_init(void) {
 
     bcm2835_init();
 
@@ -123,8 +121,7 @@ void flipdot_init(void)
 }
 
 
-void flipdot_data(uint8_t *frame, uint16_t size)
-{
+void flipdot_data(uint8_t *frame, uint16_t size) {
 	uint8_t *tmp;
 
 	memcpy(buffer_old, frame, size); /* Copy frame into buffer with old data */
@@ -157,12 +154,13 @@ uint8_t diff_to_0(uint8_t old, uint8_t new) {
 	return old & ~new;
 }
 
+
 uint8_t diff_to_1(uint8_t old, uint8_t new) {
 	return ~(~old & new);
 }
 
-static void display_frame_differential(uint8_t *to_0, uint8_t *to_1)
-{
+
+static void display_frame_differential(uint8_t *to_0, uint8_t *to_1) {
 	uint8_t row_select[DISP_ROWS/8] ={0};
 
 	for (int row = 0; row < DISP_ROWS; ++row) {
@@ -183,25 +181,25 @@ static void display_frame_differential(uint8_t *to_0, uint8_t *to_1)
 	}
 }
 
+
 /* Output bit on reg and pulse clk signal */
-static void sreg_push_bit(enum sreg reg, uint8_t bit)
-{
+static void sreg_push_bit(enum sreg reg, uint8_t bit) {
     bcm2835_gpio_write(DATA(reg), bit?HIGH:LOW);
     bcm2835_gpio_write(CLK(reg), HIGH);
     bcm2835_gpio_write(CLK(reg), LOW);
 }
 
-static void sreg_fill(enum sreg reg, uint8_t *data, int count)
-{
+
+static void sreg_fill(enum sreg reg, uint8_t *data, int count) {
 	switch (reg) {
 		case ROW: sreg_fill_row(data, count); break;
 		case COL: sreg_fill_col(data, count); break;
 	}
 }
 
+
 /* Fill col register with count bits from data LSB first */
-static void sreg_fill_col(uint8_t *data, int count)
-{
+static void sreg_fill_col(uint8_t *data, int count) {
 	int i = 0;
 	while (i < count) {
 		sreg_push_bit(COL, ISBITSET(data, (count-i-1)));
@@ -209,9 +207,9 @@ static void sreg_fill_col(uint8_t *data, int count)
 	}
 }
 
+
 /* TODO: generalize for more panels */
-static void sreg_fill_row(uint8_t *data, int count)
-{
+static void sreg_fill_row(uint8_t *data, int count) {
     /* This is necessary because the row
 	* register has 4 unmapped bits */
     int i;
@@ -236,8 +234,7 @@ static void sreg_fill_row(uint8_t *data, int count)
 }
 
 
-static void strobe(void)
-{
+static void strobe(void) {
     bcm2835_gpio_write(pinning.strobe, HIGH);
 
 	_delay_us(STROBE_DELAY);
@@ -246,8 +243,7 @@ static void strobe(void)
 }
 
 
-static void flip_white(void)
-{
+static void flip_white(void) {
     bcm2835_gpio_write(pinning.oe_black, LOW);
     bcm2835_gpio_write(pinning.oe_white, HIGH);
 
@@ -257,8 +253,7 @@ static void flip_white(void)
 }
 
 
-static void flip_black(void)
-{
+static void flip_black(void) {
     bcm2835_gpio_write(pinning.oe_black, HIGH);
     bcm2835_gpio_write(pinning.oe_white, LOW);
 
