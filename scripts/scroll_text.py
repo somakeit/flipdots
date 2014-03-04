@@ -10,6 +10,7 @@ UDPPORT=2323
 
 FPS = 13
 STEPS = 1
+INVERT=True
 
 DISPLAY_SIZE = (80, 16)
 FONT_SIZE = 16
@@ -45,9 +46,9 @@ def str2array(s):
     for pixel in image.getdata():
         r, g, b, a = pixel
         if r == 255:
-            imgmap.append(1)
+            imgmap.append(0 if INVERT else 1)
         else:
-            imgmap.append(0)
+            imgmap.append(1 if INVERT else 0)
     return imgmap
 
 
@@ -59,7 +60,7 @@ def scroll_text(imgmap):
     imgmap_width    = len(imgmap) / display_heigth
     scrollimg_width = imgmap_width + 2*display_width
 
-    scroll_imgmap = [0] * (scrollimg_width * display_heigth)
+    scroll_imgmap = [1 if INVERT else 0] * (scrollimg_width * display_heigth)
     
     # expand imgmap
     for row in range(display_heigth):

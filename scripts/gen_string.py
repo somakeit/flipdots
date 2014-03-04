@@ -9,6 +9,7 @@ UDPHOST="flipdot.ffa"
 UDPPORT=2323
 
 FPS = 3
+INVERT=True
 
 IMG_SIZE = (80, 16)
 FONT_SIZE = 16
@@ -42,9 +43,9 @@ def str2array(s):
     for pixel in image.getdata():
         r, g, b, a = pixel
         if r == 255:
-            imgmap.append(1)
+            imgmap.append(0 if INVERT else 1)
         else:
-            imgmap.append(0)
+            imgmap.append(1 if INVERT else 0)
     return imgmap
 
 while True:
