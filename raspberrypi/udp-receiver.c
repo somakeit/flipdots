@@ -12,13 +12,14 @@ void signal_handler(int signum) {
 
 int main(void)
 {
-    
+
     bool init = false;
     flipdot_net_init();
 
     signal(SIGKILL, signal_handler);
     signal(SIGQUIT, signal_handler);
     signal(SIGTERM, signal_handler);
+    signal(SIGINT,  signal_handler);
 
     uint8_t data[(16*80)/8];
     while (1) {
@@ -27,7 +28,7 @@ int main(void)
             init=true;
             flipdot_init();
         }
-        
+
         printf("got %u bytes\n", n);
         if(n >= sizeof(data)) {
             flipdot_data(data, sizeof(data));

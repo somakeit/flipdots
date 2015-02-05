@@ -7,12 +7,16 @@ void signal_handler(int signum) {
     flipdot_deinit();
     exit(EXIT_SUCCESS);
 }
+
 int main(void)
 {
     flipdot_init();
+   
     signal(SIGKILL, signal_handler);
     signal(SIGQUIT, signal_handler);
     signal(SIGTERM, signal_handler);
+    signal(SIGINT,  signal_handler);
+
     uint8_t data[80*16/8];
     uint8_t d = 0; 
     while (1) {
