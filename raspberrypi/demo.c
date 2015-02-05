@@ -4,6 +4,7 @@
 #include <signal.h>
 
 void signal_handler(int signum) {
+    flipdot_deinit();
     exit(EXIT_SUCCESS);
 }
 int main(void)
@@ -12,14 +13,6 @@ int main(void)
     signal(SIGKILL, signal_handler);
     signal(SIGQUIT, signal_handler);
     signal(SIGTERM, signal_handler);
-    int err = 0;
-    err = atexit(flipdot_deinit);
-    if (err != 0) {
-        flipdot_deinit();
-        printf("Error while init\n");
-        exit(EXIT_FAILURE);
-    }
-    
     uint8_t data[80*16/8];
     uint8_t d = 0; 
     while (1) {
