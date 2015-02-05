@@ -1,8 +1,24 @@
 #include "flipdot.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
 
+void signal_handler(int signum) {
+    exit(EXIT_SUCCESS);
+}
 int main(void)
 {
     flipdot_init();
+    signal(SIGKILL, signal_handler);
+    signal(SIGQUIT, signal_handler);
+    signal(SIGTERM, signal_handler);
+    int err = 0;
+    err = atexit(flipdot_deinit);
+    if (err != 0) {
+        flipdot_deinit();
+        printf("Error while init\n");
+        return EXIT_FAILURE;
+    }
     
     uint8_t data[80*16/8];
     uint8_t d = 0; 
@@ -20,5 +36,5 @@ int main(void)
         //for(x=0; x<10000000; x++);
         //for(x=0; x<10000000; x++);
     }
-    return 0;
+    return EXIT_SUCCESS;
 }

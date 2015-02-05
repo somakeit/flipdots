@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <stdio.h>
 
 extern int usleep (__useconds_t __useconds);
 #define _delay_us(x) usleep(x)
@@ -120,6 +121,16 @@ void flipdot_init(void) {
 
 }
 
+void flipdot_deinit(void) {
+    bcm2835_gpio_fsel(pinning.data_col, LOW);
+    bcm2835_gpio_fsel(pinning.data_row, LOW);
+    bcm2835_gpio_fsel(pinning.strobe,   LOW);
+    bcm2835_gpio_fsel(pinning.oe_white, LOW);
+    bcm2835_gpio_fsel(pinning.oe_black, LOW);
+    bcm2835_gpio_fsel(pinning.clk_col,  LOW);
+    bcm2835_gpio_fsel(pinning.clk_row,  LOW);
+    printf("All pins low \n");
+}
 
 void flipdot_data(uint8_t *frame, uint16_t size) {
 	uint8_t *tmp;

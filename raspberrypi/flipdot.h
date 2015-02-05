@@ -61,6 +61,6 @@ typedef struct {
 
 
 void flipdot_init(void);
+void flipdot_deinit(void);
 void flipdot_data(uint8_t *frames, uint16_t size);
-
 #endif /* FLIPDOT_H */
