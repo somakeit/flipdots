@@ -2,13 +2,31 @@
 #include "flipdot_net.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <signal.h>
+
+void signal_handler(int signum) {
+    exit(EXIT_SUCCESS);
+}
 
 int main(void)
 {
     
     bool init = false;
     flipdot_net_init();
-    
+
+    signal(SIGKILL, signal_handler);
+    signal(SIGQUIT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
+    int err = 0;
+    err = atexit(flipdot_deinit);
+    if (err != 0) {
+        flipdot_deinit();
+        printf("Error while init\n");
+        exit(EXIT_FAILURE);
+    }
+
     uint8_t data[(16*80)/8];
     while (1) {
         int n = flipdot_net_recv_frame((uint8_t *)data, sizeof(data));

@@ -17,7 +17,7 @@ int main(void)
     if (err != 0) {
         flipdot_deinit();
         printf("Error while init\n");
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
     
     uint8_t data[80*16/8];
@@ -36,5 +36,5 @@ int main(void)
         //for(x=0; x<10000000; x++);
         //for(x=0; x<10000000; x++);
     }
-    return EXIT_SUCCESS;
+    exit(EXIT_SUCCESS);
 }
