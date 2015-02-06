@@ -129,6 +129,9 @@ void flipdot_deinit(void) {
     bcm2835_gpio_fsel(pinning.oe_black, LOW);
     bcm2835_gpio_fsel(pinning.clk_col,  LOW);
     bcm2835_gpio_fsel(pinning.clk_row,  LOW);
+
+    bcm2835_close();
+
     printf("All pins low \n");
 }
 
