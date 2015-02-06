@@ -5,7 +5,7 @@ from PIL import Image, ImageFont, ImageDraw
 import sys
 import fileinput
 
-UDPHOST="flipdot.ffa"
+UDPHOST="flipdot.openlab.lan"
 UDPPORT=2323
 
 FPS = 3

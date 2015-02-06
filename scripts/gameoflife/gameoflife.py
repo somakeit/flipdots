@@ -5,12 +5,12 @@ from random import randint
 
 
 
-UDPHOST="flipdot.ffa"
+UDPHOST="flipdot.openlab.lan"
 #UDPHOST="fe80::221:6bff:fe4c:6e7c"
-UDPHOSTS=["flipdot.ffa"]
+UDPHOSTS=["flipdot.openlab.lan"]
 UDPPORT=2323
 
-DELAY =0.5 
+DELAY =0.05
 SIZE_Y = 80
 SIZE_X = 16
 

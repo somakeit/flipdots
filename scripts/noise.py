@@ -3,7 +3,7 @@
 import socket, time, math
 from random import randint
 
-UDPHOST="flipdot.ffa"
+UDPHOST="flipdot.openlab.lan"
 UDPPORT=2323
 
 SIZE_Y = 16

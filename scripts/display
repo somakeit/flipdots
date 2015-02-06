@@ -9,5 +9,5 @@ convert $1 -resize 80x16 -gravity center -background black -extent 80x16 $1.pbm
 pnminvert $1.pbm > $1.inv.pbm
 tail -n +3 $1.inv.pbm > $1.bin
 
-dd if=$1.bin skip=0 bs=720 count=1 2>/dev/null | socat - UDP:flipdot.ffa:2323 &
+dd if=$1.bin skip=0 bs=720 count=1 2>/dev/null | socat - UDP:flipdot.openlab.lan:2323 &
 

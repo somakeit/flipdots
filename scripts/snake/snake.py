@@ -54,7 +54,7 @@ settings = {
 "WRAP_BORDERS":True,
 
 # List of UDP hosts you can cycle through with n
-"UDPHOSTS":["192.168.2.5"],
+"UDPHOSTS":["flipdot.openlab.lan"],
 # Frames per second
 "FPS": 10,
 # map to load, filename must exist in directory lvl/SIZE_X_SIZE_Y/

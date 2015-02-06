@@ -4,7 +4,7 @@ import time
 import sys
 import random
 
-UDPHOST="flipdot.ffa"
+UDPHOST="flipdot.openlab.lan"
 UDPPORT=2323
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
