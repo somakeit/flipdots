@@ -25,7 +25,7 @@ int main(void)
     while (1) {
         int n = flipdot_net_recv_frame((uint8_t *)data, sizeof(data));
 
-        printf("got %u bytes\n", n);
+        /*printf("got %u bytes\n", n);*/
         if(n >= sizeof(data)) {
             flipdot_data(data, sizeof(data));
             n -=  sizeof(data);

@@ -113,12 +113,13 @@ void flipdot_init(void) {
     flipdot_data(buffer_old, DISP_BYTE_COUNT);
     flipdot_data(buffer_old, DISP_BYTE_COUNT);
     flipdot_data(buffer_old, DISP_BYTE_COUNT);
-    
+
     int i;
     for(i=0; i<256; i++) {
         flipper[i] = reverse(i);
     }
 
+    printf("Flipdot ready\n")
 }
 
 void flipdot_deinit(void) {
@@ -132,14 +133,14 @@ void flipdot_deinit(void) {
 
     bcm2835_close();
 
-    printf("All pins low \n");
+    printf("All pins low. Good bye\n");
 }
 
 void flipdot_data(uint8_t *frame, uint16_t size) {
 	uint8_t *tmp;
 
 	memcpy(buffer_old, frame, size); /* Copy frame into buffer with old data */
-    
+
     int i;
 	for(i = 0; i < size; i++) {
         uint8_t c = buffer_old[i];
@@ -149,7 +150,7 @@ void flipdot_data(uint8_t *frame, uint16_t size) {
 	tmp = buffer_old;				 /* swap pointers buffer_new and buffer_old */
 	buffer_old = buffer_new;
 	buffer_new = tmp;
-	
+
 	map_two_buffers(diff_to_0, buffer_old, buffer_new, buffer_to_0, DISP_BYTE_COUNT);
 	map_two_buffers(diff_to_1, buffer_old, buffer_new, buffer_to_1, DISP_BYTE_COUNT);
 
