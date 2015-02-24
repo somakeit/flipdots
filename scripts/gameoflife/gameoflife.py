@@ -10,7 +10,7 @@ UDPHOST="flipdot.openlab.lan"
 UDPHOSTS=["flipdot.openlab.lan"]
 UDPPORT=2323
 
-DELAY =0.05
+DELAY =0.07
 SIZE_Y = 80
 SIZE_X = 16
 
