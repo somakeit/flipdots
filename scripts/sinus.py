@@ -9,7 +9,7 @@ import sys
 # import platform
 import math
 
-UDPHOST="192.168.2.5"
+UDPHOST="flipdot.openlab.lan"
 UDPPORT=2323
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -59,5 +59,5 @@ def main(dt):
         phase += dphase/dt
         time.sleep(dt)
 
-FPS = 15.0
+FPS = 13.0
 main(1/FPS)

@@ -3,13 +3,11 @@ from font import font8px
 
 class FlipdotMatrix():
     def __init__(self, 
-                 udpHostsAndPorts = [("2001:7f0:3003:cafe:ba27:ebff:fe86:8697",2323),
-                                   ("2001:7f0:3003:cafe:ba27:ebff:fe23:60d7", 2323),
-                                   ("2001:7f0:3003:cafe:ba27:ebff:fe71:dd32", 2323)],
-                 imageSize=(144, 120),
+                 udpHostsAndPorts = [("flipdot.openlab.lan", 2323)],
+                 imageSize=(16, 80),
                  transposed = True
                  ):
-        self.__sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.transposed = transposed
         self.udpHostsAndPorts=udpHostsAndPorts
         self.numberOfMatrixes = len(udpHostsAndPorts)

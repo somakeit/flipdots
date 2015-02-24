@@ -57,7 +57,7 @@ HEIGHT = 16
 
 matrix = FlipdotMatrix(
      udpHostsAndPorts = [
-         ("192.168.2.5", 2323),
+         ("flipdot.openlab.lan", 2323),
      ],
      imageSize = (WIDTH, HEIGHT),
      transposed = True,
