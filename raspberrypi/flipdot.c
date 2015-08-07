@@ -119,7 +119,7 @@ void flipdot_init(void) {
         flipper[i] = reverse(i);
     }
 
-    printf("Flipdot ready\n")
+    printf("Flipdot ready\n");
 }
 
 void flipdot_deinit(void) {
