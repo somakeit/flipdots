@@ -1,77 +1,60 @@
 #!/usr/bin/env python2
-# Copyright (c) 2013, Florian 'dividuum' Wesch
-# All rights reserved.
-# 
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# 
-# 1. Redistributions of source code must retain the above copyright notice, this
-#    list of conditions and the following disclaimer.
-# 
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer in the documentation
-#    and/or other materials provided with the distribution.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import time
 import gevent
 import random
 from flask import Flask
-from flask import redirect, url_for
+from flask import redirect, url_for, request
 from gevent.wsgi import WSGIServer
 from FlipdotAPI.FlipdotMatrix import FlipdotMatrix
 from FlipdotAPI.FlipdotMatrix import FlipdotImage
+from dns import resolver
+from dns import reversename
 
 app = Flask(__name__)
-# app.debug = True
+app.debug = True
 
 STARTED = time.time()
 
 # Publicly visible IP
-MYIP = "144.76.70.112"
+MYIP = "sr-flipdot"
 
 # HTTP Port
 PORT = 8080
 
-# seconds per frame
-TICK_TIME = 0.7 
+# Frames Per Second
+FPS = 25
 
 # round time. put this game in an outside while loop and just restart it
-ROUND_TIME = 600 
+ROUND_TIME = 300
 
 # reserved pixels at the top
-TOP = 20
+TOP = 1
 
-WIDTH = 80
+WIDTH = 120
 HEIGHT = 16
 
 matrix = FlipdotMatrix(
      udpHostsAndPorts = [
-         ("flipdot.openlab.lan", 2323),
+         ("sr-flipdot", 2323),
      ],
      imageSize = (WIDTH, HEIGHT),
-     transposed = True,
+     transposed = False,
 )
 
 class Player(object):
-    def __init__(self, game, player_id):
+    def __init__(self, game, player_id, ip):
         self.game = game
         self.player_id = player_id
         self.reset()
+        self.kills = 0
+        self.deaths = 0
+        self.longest = 0
+        self.ip = ip
 
     def reset(self):
-        self.x = random.randint(20, self.game.width-1-20)
-        self.y = random.randint(TOP + 20, self.game.height-1-20)
+        self.x = random.randint(1, 118)
+        self.y = random.randint(1, 14)
         self.dir = random.randint(0, 3)
         self.path = []
 
@@ -79,6 +62,14 @@ class Player(object):
         self.game.set_pixel(self.x, self.y)
 
     def set_dir(self, dir):
+        if self.dir == 0 and dir == 2:
+            return
+        if self.dir == 2 and dir == 0:
+            return
+        if self.dir == 1 and dir == 3:
+            return
+        if self.dir == 3 and dir == 1:
+            return
         self.dir = dir
 
     def step(self):
@@ -90,14 +81,16 @@ class Player(object):
             self.y += 1
         elif self.dir == 3:
             self.x -= 1
-
         if self.game.is_set(self.x, self.y):
             for x, y in self.path:
+                self.deaths += 1
                 self.game.del_pixel(x, y)
             self.reset()
             return
 
         self.path.append((self.x, self.y))
+        if len(self.path) > self.longest:
+            self.longest = len(self.path)
         self.draw()
 
 class Game(object):
@@ -107,9 +100,9 @@ class Game(object):
         self.width = width
         self.height = height
 
-    def ensure_join(self, player_id):
+    def ensure_join(self, player_id, ip):
         if not player_id in self.players:
-            self.players[player_id] = Player(self, player_id)
+            self.players[player_id] = Player(self, player_id, ip)
 
     def set_dir(self, player_id, dir):
         self.players[player_id].set_dir(dir)
@@ -147,16 +140,30 @@ class Game(object):
         for player in self.players.itervalues():
             player.reset()
             player.draw()
-        self.image.blitTextAtPosition("join this game by dividuum", xPos=5, yPos=2)
-        self.image.blitTextAtPosition("http://%s:%d/" % (MYIP, PORT), xPos=5, yPos=9)
+        #self.image.blitTextAtPosition("join this game", xPos=5, yPos=2)
+        #self.image.blitTextAtPosition("http://%s:%d/" % (MYIP, PORT), xPos=5, yPos=9)
         self.flush()
 
     def step(self):
-        print "step"
+        #print "step"
         for player in self.players.itervalues():
             player.step()
         remaining = ROUND_TIME - (time.time() - STARTED)
-        self.image.blitTextAtPosition("%03d" % remaining, xPos=120, yPos=9)
+        self.image.blitTextAtPosition("%03d" % remaining, xPos=1, yPos=0)
+
+        if time.time() - STARTED > ROUND_TIME:
+            #This is the end
+            winner = self.players[self.players.keys()[0]]
+            for player in self.players.itervalues():
+                if player.longest > winner.longest:
+                    winner = player
+            try:
+                winner_name = str(resolver.query(reversename.from_address(winner.ip), "PTR")[0]).split(".")[0]
+            except resolver.NoAnswer:
+                winner_name = winner.ip
+            self.image.blitTextAtPosition("Winner: " + str(winner_name), xPos=1, yPos=1)
+            self.image.blitTextAtPosition("Length: " + str(winner.longest), xPos=1, yPos=7)
+        
         self.flush()
 
 g = Game(WIDTH, HEIGHT, matrix)
@@ -164,8 +171,13 @@ g = Game(WIDTH, HEIGHT, matrix)
 def game():
     while 1:
         g.start()
+        last_time = time.time()
         while 1:
-            gevent.sleep(TICK_TIME)
+            new_time = time.time()
+            sleep_time = ((1000.0 / FPS) - (new_time - last_time)) / 1000.0
+            if sleep_time > 0:
+                gevent.sleep(sleep_time)
+            last_time = new_time
             g.step()
 
 @app.route('/')
@@ -175,13 +187,13 @@ def index():
 
 @app.route('/c/<player_id>/<int:dir>')
 def controller(player_id, dir):
-    g.ensure_join(player_id)
+    g.ensure_join(player_id, request.remote_addr)
     g.set_dir(player_id, dir)
     return 'ok'
 
 @app.route('/c/<player_id>/')
 def player(player_id):
-    g.ensure_join(player_id)
+    g.ensure_join(player_id, request.remote_addr)
     return """
 <html>
 <head>
@@ -229,6 +241,20 @@ def player(player_id):
         }
         $(function() {
             $(".control").on('tap',function() { move($(this).data('dir')); });
+        });
+        document.addEventListener('keydown', function(event) {
+            if(event.keyCode == 37) {
+                move(3)
+            }
+            else if(event.keyCode == 39) {
+                move(1)
+            }
+            else if(event.keyCode == 38) {
+                move(0)
+            }
+            else if(event.keyCode == 40) {
+                move(2)
+            }
         });
     </script>
 </body>
