@@ -49,10 +49,7 @@ PORT = 8080
 FPS = 25
 
 # round time. put this game in an outside while loop and just restart it
-ROUND_TIME = 300
-
-# reserved pixels at the top
-TOP = 1
+ROUND_TIME = 600
 
 WIDTH = 120
 HEIGHT = 16
@@ -74,17 +71,25 @@ class Player(object):
         self.deaths = 0
         self.longest = 0
         self.ip = ip
+        self.can_move = True
 
     def reset(self):
-        self.x = random.randint(1, 118)
-        self.y = random.randint(1, 14)
+        self.x = random.randint(20, WIDTH - 2)
+        self.y = random.randint(6, HEIGHT - 2)
         self.dir = random.randint(0, 3)
+        # check if we beat our longest
+        if len(self.path) > self.longest:
+            self.longest = len(self.path)
+        # reset
         self.path = []
 
     def draw(self):
-        self.game.set_pixel(self.x, self.y)
+        self.game.set_pixel(self.x, self.y, self.player_id)
 
     def set_dir(self, dir):
+        # try avoid 180 suicide
+        if self.can_move == False:
+            return
         if self.dir == 0 and dir == 2:
             return
         if self.dir == 2 and dir == 0:
@@ -93,9 +98,12 @@ class Player(object):
             return
         if self.dir == 3 and dir == 1:
             return
+        
         self.dir = dir
+        self.can_move = False
 
     def step(self):
+        self.can_move = True
         if self.dir == 0:
             self.y -= 1
         elif self.dir == 1:
@@ -105,23 +113,28 @@ class Player(object):
         elif self.dir == 3:
             self.x -= 1
         if self.game.is_set(self.x, self.y):
+            # find who killed player
+            killer = self.game.pixels[self.x][self.y]
+            if killer != 0:
+                self.game.players[killer].kills += 1
+            
+            self.deaths += 1
             for x, y in self.path:
-                self.deaths += 1
                 self.game.del_pixel(x, y)
             self.reset()
             return
 
         self.path.append((self.x, self.y))
-        if len(self.path) > self.longest:
-            self.longest = len(self.path)
         self.draw()
 
 class Game(object):
-    def __init__(self, width, height, matrix):
+    def __init__(self, matrix):
         self.players = {}
         self.matrix = matrix
-        self.width = width
-        self.height = height
+        self.pixels = []
+        for x in range(WIDTH):
+            for y in range(HEIGHT):
+                self.pixels[x][y] = 0
 
     def ensure_join(self, player_id, ip):
         if not player_id in self.players:
@@ -131,15 +144,17 @@ class Game(object):
         self.players[player_id].set_dir(dir)
 
     def reset_white(self):
-        black = FlipdotImage.newBlackFlipdotImage(self.width, self.height)
+        black = FlipdotImage.newBlackFlipdotImage(WIDTH HEIGHT)
         self.matrix.show(black)
-        white = FlipdotImage.newWhiteFlipdotImage(self.width, self.height)
+        white = FlipdotImage.newWhiteFlipdotImage(WIDTH, HEIGHT)
         self.matrix.show(white)
 
-    def set_pixel(self, x, y):
+    def set_pixel(self, x, y, player_id = 0):
+        self.pixels[x][y] = player_id
         self.image.getLine(y)[x] = FlipdotImage.BLACKPIXEL
 
     def del_pixel(self, x, y):
+        self.pixels[x][y] = 0
         self.image.getLine(y)[x] = FlipdotImage.WHITEPIXEL
 
     def is_set(self, x, y):
@@ -151,15 +166,14 @@ class Game(object):
     def start(self):
         print "resetting game"
         self.image = FlipdotImage.newWhiteFlipdotImage(
-            self.width, self.height)
+            WIDTH, HEIGHT)
         self.reset_white()
-        for x in xrange(self.width):
-            for y in xrange(TOP):
-                self.set_pixel(x, y)
-            self.set_pixel(x, self.height-1)
-        for y in xrange(self.height):
+        for x in xrange(WIDTH):
+            self.set_pixel(x, 0)
+            self.set_pixel(x, HEIGHT-1)
+        for y in xrange(HEIGHT):
             self.set_pixel(0,  y)
-            self.set_pixel(self.width - 1, y)
+            self.set_pixel(WIDTH - 1, y)
         for player in self.players.itervalues():
             player.reset()
             player.draw()
@@ -176,16 +190,29 @@ class Game(object):
 
         if time.time() - STARTED > ROUND_TIME:
             #This is the end
-            winner = self.players[self.players.keys()[0]]
+            # longest line
+            winner1 = self.players[self.players.keys()[0]]
             for player in self.players.itervalues():
-                if player.longest > winner.longest:
-                    winner = player
+                # check if current is their longest
+                if len(player.path) > player.longest:
+                    player.longest = len(player.path)
+                # check if they are the winning longest
+                if player.longest > winner1.longest:
+                    winner1 = player
             try:
-                winner_name = str(resolver.query(reversename.from_address(winner.ip), "PTR")[0]).split(".")[0]
+                winner1_name = str(resolver.query(reversename.from_address(winner1.ip), "PTR")[0]).split(".")[0]
             except resolver.NoAnswer:
-                winner_name = winner.ip
-            self.image.blitTextAtPosition("Winner: " + str(winner_name), xPos=1, yPos=1)
-            self.image.blitTextAtPosition("Length: " + str(winner.longest), xPos=1, yPos=7)
+                winner1_name = winner1.ip
+            
+            # kills and deaths
+            # score = kills - deaths
+            winner2 = self.players[self.players.keys()[0]]
+            for player in self.players.itervalues():
+                if player.kills - player.deaths > winner2.kills - winner2.deaths:
+                    winner2 = player
+            
+            self.image.blitTextAtPosition("Winner: " + str(winner1_name), xPos=1, yPos=1)
+            self.image.blitTextAtPosition("Length: " + str(winner1.longest), xPos=1, yPos=7)
         
         self.flush()
 
@@ -253,8 +280,6 @@ def player(player_id):
             <td></td>
         </tr>
     </table>
-    <br/>
-    made by <a href='http://dividuum.de/'>dividuum</a>
     <script>
         function move(dir) {
             $.ajax({
