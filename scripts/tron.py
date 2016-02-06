@@ -35,7 +35,7 @@ from dns import resolver
 from dns import reversename
 
 app = Flask(__name__)
-app.debug = True
+app.debug = False
 
 STARTED = time.time()
 
@@ -50,6 +50,9 @@ FPS = 25
 
 # round time. put this game in an outside while loop and just restart it
 ROUND_TIME = 600
+
+# time to wait before game start
+WAIT_TIME = 15
 
 WIDTH = 120
 HEIGHT = 16
@@ -66,12 +69,13 @@ class Player(object):
     def __init__(self, game, player_id, ip):
         self.game = game
         self.player_id = player_id
-        self.reset()
+        self.path = []
         self.kills = 0
         self.deaths = 0
         self.longest = 0
         self.ip = ip
         self.can_move = True
+        self.reset()
 
     def reset(self):
         self.x = random.randint(20, WIDTH - 2)
@@ -131,10 +135,7 @@ class Game(object):
     def __init__(self, matrix):
         self.players = {}
         self.matrix = matrix
-        self.pixels = []
-        for x in range(WIDTH):
-            for y in range(HEIGHT):
-                self.pixels[x][y] = 0
+        self.pixels = [[0 for x in range(HEIGHT)] for x in range(WIDTH)]
 
     def ensure_join(self, player_id, ip):
         if not player_id in self.players:
@@ -144,7 +145,7 @@ class Game(object):
         self.players[player_id].set_dir(dir)
 
     def reset_white(self):
-        black = FlipdotImage.newBlackFlipdotImage(WIDTH HEIGHT)
+        black = FlipdotImage.newBlackFlipdotImage(WIDTH, HEIGHT)
         self.matrix.show(black)
         white = FlipdotImage.newWhiteFlipdotImage(WIDTH, HEIGHT)
         self.matrix.show(white)
@@ -164,21 +165,33 @@ class Game(object):
         self.matrix.show(self.image)
 
     def start(self):
-        print "resetting game"
-        self.image = FlipdotImage.newWhiteFlipdotImage(
-            WIDTH, HEIGHT)
-        self.reset_white()
+        print "starting game"
+        # show connection screen
+        
+        self.image = FlipdotImage.newBlackFlipdotImage(WIDTH, HEIGHT)
+        #self.reset_white()
+        for t in range(WAIT_TIME, 1, -1):
+            self.image.blitTextAtPosition("join this game", xPos=10, yPos=1)
+            self.image.blitTextAtPosition("http://%s:%d/" % (MYIP, PORT), xPos=10, yPos=8)
+            self.image.blitTextAtPosition("..%02d" % t, xPos=95, yPos=1)
+            self.flush()
+            time.sleep(1)
+        
+        # start the game
+        global STARTED # hacky
+        STARTED = time.time()
+        self.image = FlipdotImage.newWhiteFlipdotImage(WIDTH, HEIGHT)
+        #self.reset_white()
         for x in xrange(WIDTH):
             self.set_pixel(x, 0)
             self.set_pixel(x, HEIGHT-1)
         for y in xrange(HEIGHT):
             self.set_pixel(0,  y)
             self.set_pixel(WIDTH - 1, y)
+        
         for player in self.players.itervalues():
             player.reset()
             player.draw()
-        #self.image.blitTextAtPosition("join this game", xPos=5, yPos=2)
-        #self.image.blitTextAtPosition("http://%s:%d/" % (MYIP, PORT), xPos=5, yPos=9)
         self.flush()
 
     def step(self):
@@ -210,13 +223,17 @@ class Game(object):
             for player in self.players.itervalues():
                 if player.kills - player.deaths > winner2.kills - winner2.deaths:
                     winner2 = player
+            try:
+                winner2_name = str(resolver.query(reversename.from_address(winner2.ip), "PTR")[0]).split(".")[0]
+            except resolver.NoAnswer:
+                winner2_name = winner2.ip
             
-            self.image.blitTextAtPosition("Winner: " + str(winner1_name), xPos=1, yPos=1)
-            self.image.blitTextAtPosition("Length: " + str(winner1.longest), xPos=1, yPos=7)
+            self.image.blitTextAtPosition("Winner: " + str(winner2_name), xPos=1, yPos=0)
+            self.image.blitTextAtPosition("Score: " + str(winner2.kills - winner2.deaths), xPos=4, yPos=7)
         
         self.flush()
 
-g = Game(WIDTH, HEIGHT, matrix)
+g = Game(matrix)
 
 def game():
     while 1:
